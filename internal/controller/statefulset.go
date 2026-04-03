@@ -48,8 +48,14 @@ func (r *StatefulSetRolloutReconciler) Reconcile(ctx context.Context, req reconc
 	sts.Spec.Template.Annotations[hash.AnnotationKey] = newHash
 
 	if err := r.Patch(ctx, sts, client.MergeFrom(orig)); err != nil {
-		return ctrl.Result{}, err
+		return ctrl.Result{}, client.IgnoreNotFound(err)
 	}
+	fresh := &appsv1.StatefulSet{}
+	if err := r.Get(ctx, req.NamespacedName, fresh); err != nil {
+		return ctrl.Result{}, client.IgnoreNotFound(err)
+	}
+	logConfigHashPatched("StatefulSet", fresh.Namespace, fresh.Name, cur, newHash)
+	go waitAndLogRollout(context.Background(), r.Client, req.NamespacedName, fresh.Generation, rolloutKindStatefulSet)
 	return ctrl.Result{}, nil
 }
 
@@ -73,6 +79,7 @@ func (r *StatefulSetRolloutReconciler) mapConfigMapToStatefulSets(ctx context.Co
 			out = append(out, reconcile.Request{NamespacedName: types.NamespacedName{Namespace: s.Namespace, Name: s.Name}})
 		}
 	}
+	logEnqueueFromConfigTrigger("ConfigMap", cm.Namespace, cm.Name, len(out))
 	return out
 }
 
@@ -96,5 +103,6 @@ func (r *StatefulSetRolloutReconciler) mapSecretToStatefulSets(ctx context.Conte
 			out = append(out, reconcile.Request{NamespacedName: types.NamespacedName{Namespace: s.Namespace, Name: s.Name}})
 		}
 	}
+	logEnqueueFromConfigTrigger("Secret", sec.Namespace, sec.Name, len(out))
 	return out
 }

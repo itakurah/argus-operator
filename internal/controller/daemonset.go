@@ -48,8 +48,14 @@ func (r *DaemonSetRolloutReconciler) Reconcile(ctx context.Context, req reconcil
 	ds.Spec.Template.Annotations[hash.AnnotationKey] = newHash
 
 	if err := r.Patch(ctx, ds, client.MergeFrom(orig)); err != nil {
-		return ctrl.Result{}, err
+		return ctrl.Result{}, client.IgnoreNotFound(err)
 	}
+	fresh := &appsv1.DaemonSet{}
+	if err := r.Get(ctx, req.NamespacedName, fresh); err != nil {
+		return ctrl.Result{}, client.IgnoreNotFound(err)
+	}
+	logConfigHashPatched("DaemonSet", fresh.Namespace, fresh.Name, cur, newHash)
+	go waitAndLogRollout(context.Background(), r.Client, req.NamespacedName, fresh.Generation, rolloutKindDaemonSet)
 	return ctrl.Result{}, nil
 }
 
@@ -73,6 +79,7 @@ func (r *DaemonSetRolloutReconciler) mapConfigMapToDaemonSets(ctx context.Contex
 			out = append(out, reconcile.Request{NamespacedName: types.NamespacedName{Namespace: d.Namespace, Name: d.Name}})
 		}
 	}
+	logEnqueueFromConfigTrigger("ConfigMap", cm.Namespace, cm.Name, len(out))
 	return out
 }
 
@@ -96,5 +103,6 @@ func (r *DaemonSetRolloutReconciler) mapSecretToDaemonSets(ctx context.Context, 
 			out = append(out, reconcile.Request{NamespacedName: types.NamespacedName{Namespace: d.Namespace, Name: d.Name}})
 		}
 	}
+	logEnqueueFromConfigTrigger("Secret", sec.Namespace, sec.Name, len(out))
 	return out
 }

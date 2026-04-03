@@ -48,8 +48,14 @@ func (r *DeploymentRolloutReconciler) Reconcile(ctx context.Context, req reconci
 	dep.Spec.Template.Annotations[hash.AnnotationKey] = newHash
 
 	if err := r.Patch(ctx, dep, client.MergeFrom(orig)); err != nil {
-		return ctrl.Result{}, err
+		return ctrl.Result{}, client.IgnoreNotFound(err)
 	}
+	fresh := &appsv1.Deployment{}
+	if err := r.Get(ctx, req.NamespacedName, fresh); err != nil {
+		return ctrl.Result{}, client.IgnoreNotFound(err)
+	}
+	logConfigHashPatched("Deployment", fresh.Namespace, fresh.Name, cur, newHash)
+	go waitAndLogRollout(context.Background(), r.Client, req.NamespacedName, fresh.Generation, rolloutKindDeployment)
 	return ctrl.Result{}, nil
 }
 
@@ -73,6 +79,7 @@ func (r *DeploymentRolloutReconciler) mapConfigMapToDeployments(ctx context.Cont
 			out = append(out, reconcile.Request{NamespacedName: types.NamespacedName{Namespace: d.Namespace, Name: d.Name}})
 		}
 	}
+	logEnqueueFromConfigTrigger("ConfigMap", cm.Namespace, cm.Name, len(out))
 	return out
 }
 
@@ -96,5 +103,6 @@ func (r *DeploymentRolloutReconciler) mapSecretToDeployments(ctx context.Context
 			out = append(out, reconcile.Request{NamespacedName: types.NamespacedName{Namespace: d.Namespace, Name: d.Name}})
 		}
 	}
+	logEnqueueFromConfigTrigger("Secret", sec.Namespace, sec.Name, len(out))
 	return out
 }
