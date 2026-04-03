@@ -3,8 +3,8 @@
 Argus is a lightweight Kubernetes operator that automates rolling updates for your applications. It monitors referenced ConfigMaps and Secrets, triggering a native rollout whenever their data changes so your pods are always in sync with their configuration.
 
 ```markdown
-> [!NOTE]
-> Currently supports **Deployments**, **StatefulSets**, and **DaemonSets**.
+[!NOTE]
+Currently supports **Deployments**, **StatefulSets**, and **DaemonSets**.
 ```
 
 ### Key Features
