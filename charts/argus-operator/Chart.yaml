@@ -1,0 +1,18 @@
+apiVersion: v2
+name: argus-operator
+description: A lightweight K8s operator for automated rolling updates on ConfigMap/Secret changes.
+type: application
+version: 0.1.0
+appVersion: "0.1.0"
+license: MIT
+home: https://github.com/itakurah/argus-operator
+sources:
+  - https://github.com/itakurah/argus-operator/tree/main/charts/argus-operator
+keywords:
+  - kubernetes
+  - operator
+  - configmap
+  - secret
+maintainers:
+  - name: Niklas Hoefflin (itakurah)
+    url: https://github.com/itakurah
