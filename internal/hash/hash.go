@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
@@ -32,6 +33,10 @@ func ComputeForPodTemplate(ctx context.Context, c client.Reader, namespace strin
 		cm := &corev1.ConfigMap{}
 		key := types.NamespacedName{Namespace: namespace, Name: name}
 		if err := c.Get(ctx, key, cm); err != nil {
+			if errors.IsNotFound(err) {
+				parts = append(parts, "ConfigMap/"+name+"\n"+canonicalConfigMapData(nil))
+				continue
+			}
 			return "", fmt.Errorf("get configmap %s/%s: %w", namespace, name, err)
 		}
 		parts = append(parts, "ConfigMap/"+name+"\n"+canonicalConfigMapData(cm.Data))
@@ -40,6 +45,10 @@ func ComputeForPodTemplate(ctx context.Context, c client.Reader, namespace strin
 		sec := &corev1.Secret{}
 		key := types.NamespacedName{Namespace: namespace, Name: name}
 		if err := c.Get(ctx, key, sec); err != nil {
+			if errors.IsNotFound(err) {
+				parts = append(parts, "Secret/"+name+"\n"+canonicalSecretData(nil))
+				continue
+			}
 			return "", fmt.Errorf("get secret %s/%s: %w", namespace, name, err)
 		}
 		parts = append(parts, "Secret/"+name+"\n"+canonicalSecretData(sec.Data))
