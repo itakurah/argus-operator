@@ -14,6 +14,8 @@ import (
 	"github.com/itakurah/argus-operator/internal/controller"
 )
 
+var Version = "dev"
+
 var scheme = runtime.NewScheme()
 
 func init() {
@@ -31,6 +33,8 @@ func main() {
 
 	ctrl.SetLogger(zap.New(zap.UseFlagOptions(&opts)))
 	setupLog := ctrl.Log.WithName("setup")
+
+	setupLog.Info("starting Argus Operator", "version", Version)
 
 	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
 		Scheme:                 scheme,
