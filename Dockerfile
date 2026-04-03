@@ -1,4 +1,3 @@
-# Stage 1: Build
 FROM golang:1.22-bookworm AS builder
 
 ARG VERSION=dev
