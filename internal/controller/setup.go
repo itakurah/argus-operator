@@ -4,7 +4,6 @@ import (
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	ctrl "sigs.k8s.io/controller-runtime"
-	"sigs.k8s.io/controller-runtime/pkg/handler"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 )
 
@@ -16,11 +15,11 @@ func SetupWithManager(mgr manager.Manager) error {
 		For(&appsv1.Deployment{}).
 		Watches(
 			&corev1.ConfigMap{},
-			handler.EnqueueRequestsFromMapFunc(dr.mapConfigMapToDeployments),
+			mapHandler("ConfigMap", dr.mapConfigMapToDeployments),
 		).
 		Watches(
 			&corev1.Secret{},
-			handler.EnqueueRequestsFromMapFunc(dr.mapSecretToDeployments),
+			mapHandler("Secret", dr.mapSecretToDeployments),
 		).
 		Complete(dr); err != nil {
 		return err
@@ -32,11 +31,11 @@ func SetupWithManager(mgr manager.Manager) error {
 		For(&appsv1.StatefulSet{}).
 		Watches(
 			&corev1.ConfigMap{},
-			handler.EnqueueRequestsFromMapFunc(sr.mapConfigMapToStatefulSets),
+			mapHandler("ConfigMap", sr.mapConfigMapToStatefulSets),
 		).
 		Watches(
 			&corev1.Secret{},
-			handler.EnqueueRequestsFromMapFunc(sr.mapSecretToStatefulSets),
+			mapHandler("Secret", sr.mapSecretToStatefulSets),
 		).
 		Complete(sr); err != nil {
 		return err
@@ -48,11 +47,11 @@ func SetupWithManager(mgr manager.Manager) error {
 		For(&appsv1.DaemonSet{}).
 		Watches(
 			&corev1.ConfigMap{},
-			handler.EnqueueRequestsFromMapFunc(dsr.mapConfigMapToDaemonSets),
+			mapHandler("ConfigMap", dsr.mapConfigMapToDaemonSets),
 		).
 		Watches(
 			&corev1.Secret{},
-			handler.EnqueueRequestsFromMapFunc(dsr.mapSecretToDaemonSets),
+			mapHandler("Secret", dsr.mapSecretToDaemonSets),
 		).
 		Complete(dsr)
 }
