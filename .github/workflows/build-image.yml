@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
     inputs:
       tag:
-        description: 'Tag to build (e.g., 0.1.0)'
+        description: 'Git tag to checkout (e.g. v0.1.0). Pushed image tag is without v (e.g. 0.1.0).'
         required: true
         type: string
 
@@ -31,14 +31,24 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Extract metadata for Docker manual
+      - name: Docker image version tag
+        id: imagever
+        shell: bash
+        run: |
+          if [ "${GITHUB_EVENT_NAME}" = "workflow_dispatch" ]; then
+            T="${{ github.event.inputs.tag }}"
+          else
+            T="${GITHUB_REF_NAME}"
+          fi
+          echo "tag=${T#v}" >> "$GITHUB_OUTPUT"
+
+      - name: Extract Docker metadata
         id: meta
         uses: docker/metadata-action@v5
         with:
           images: ghcr.io/${{ github.repository }}
           tags: |
-            type=semver,pattern={{version}},prefix=
-            type=raw,value=${{ github.event.inputs.tag }},enable=${{ github.event_name == 'workflow_dispatch' }}
+            type=raw,value=${{ steps.imagever.outputs.tag }}
 
       - name: Build and push Docker image
         uses: docker/build-push-action@v5
@@ -48,4 +58,4 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           build-args: |
-            VERSION=${{ steps.meta.outputs.version }}
+            VERSION=${{ steps.imagever.outputs.tag }}
