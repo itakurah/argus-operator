@@ -1,7 +1,7 @@
 image:
-  registry: ""
-  repository: argus-operator
-  tag: dev
+  registry: "ghcr.io"
+  repository: itakurah/argus-operator
+  tag: 0.1.2-alpha
   pullPolicy: IfNotPresent
   pullSecrets: []
 
