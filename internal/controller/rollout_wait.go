@@ -26,10 +26,10 @@ const (
 	deploymentProgressingReasonNewRS = "NewReplicaSetAvailable"
 )
 
-// errWorkloadDeleted stops the poll when the workload object no longer exists (no success log).
+// errWorkloadDeleted stops the poll when the workload object no longer exists
 var errWorkloadDeleted = errors.New("workload was deleted")
 
-// waitAndLogRollout polls workload status in the background and logs when the rollout completes or times out.
+// waitAndLogRollout polls workload status in the background
 func waitAndLogRollout(ctx context.Context, c client.Client, nn types.NamespacedName, generation int64, kind string) {
 	waitCtx, cancel := context.WithTimeout(ctx, rolloutPollTimeout)
 	defer cancel()
